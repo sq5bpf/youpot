@@ -5,6 +5,11 @@ While other honeypots will put a lot of effort into emulating some service,
 we will just proxy the TCP connection back to the original host on the same 
 destination port.
 
+Author: Jacek Lipkowski SQ5BPF  <youpot@lipkowski.org>
+
+For citation please use CITATION.cff
+
+
 ## Reasoning
 
 Building a high interaction honeypot requires either writing a lot
@@ -64,6 +69,58 @@ Example unified diff:
 ... TODO: will add some stuff here later.
 
 
+## Care and feeding
+
+Youpot is currently hardcoded to run in /home/youpot/youpot. I will change this
+in the future.
+
+The logs are in /home/youpot/youpot/log:
+* youpot.log - a generic log which shows what oupot is doing
+* directories like IP/PORT/TIMESTAMP_TIMESTAMPus like: 1.2.3.4/23/1111_2222. this will include hexdump.log (a hexdump of the traffic), textdump.log (a raw dump of the traffic, nicer to look at than the hexdump), connection.json (json file with the traffic, easier to parse but harder to look at by a human), and optionally files/directories created by some protocol proxy (currently only ssm-mitm).
+
+## Traffic modification
+
+There is a simple facility to search/replace patterns in the traffic.
+
+
+Place files like (where NNN is a number 0-99):
+* pattern_NNN (pattern to search)
+* replace_NNN (what to replace it with)
+* descr_NNN (description of the replacement)
+
+In directories like:
+* /home/youpot/youpot/patterns_fromclient - replacing traffic from the client to the server
+* /home/youpot/youpot/patterns_fromserver - replacing traffic from the server to the client
+* Youpot will re-read the pattern files when it get a SIGHUP, so you can do: kill -HUP $(pidof youpot) after changing
+* NOTE: there is no port match currenntly, no regexps etc. This is on the TODO list somewhere
+
+
+Examples:
+
+###### break STARTTLS in SMTP
+echo -n 'STARTTLS' > /home/youpot/youpot/patterns_fromserver/pattern_1
+echo -n 'STARTWTF' > /home/youpot/youpot/patterns_fromserver/replace_1
+echo  'break STARTTLS from server' > /home/youpot/youpot/patterns_fromserver/descr_1
+echo -n 'STARTTLS' > /home/youpot/youpot/patterns_fromclient/pattern_1
+echo -n 'HELP WTF' > /home/youpot/youpot/patterns_fromclient/replace_1
+echo  'break STARTTLS from client' > /home/youpot/youpot/patterns_fromclient/descr_1
+echo -n 'STARTTLS' > /home/youpot/youpot/patterns_fromserver/pattern_1
+echo -n 'STARTWTF' > /home/youpot/youpot/patterns_fromserver/replace_1
+echo  'break STARTTLS from server' > /home/youpot/youpot/patterns_fromserver/descr_1
+
+###### mess with HTTP headers
+echo -n 'Accept-Encoding: gzip, deflate' > /home/youpot/youpot/patterns_fromclient/pattern_10
+echo -n 'Accept-Encoding: wtf' > /home/youpot/youpot/patterns_fromclient/replace_10
+echo 'turn off compression1' > /home/youpot/youpot/patterns_fromclient/descr_10
+
+echo -n 'Accept-Encoding: gzip' > /home/youpot/youpot/patterns_fromclient/pattern_11
+echo -n 'Accept-Encoding: wtf' > /home/youpot/youpot/patterns_fromclient/replace_11
+echo 'turn off compression2' > /home/youpot/youpot/patterns_fromclient/descr_11
+e
+
+
+
+
 ## Reporting
 
 There are no reporting tools included with this software. Just parse the files yourself.
@@ -81,7 +138,6 @@ Look at the raw dump or traffic for each port (press q for the next port):
 cd ~/youpot/log
 ls -1d */* | cut -d / -f 2 | sort -u |while read port; do (echo "#######  $port   #######"; cat */$port/*/textdump.log ) |less ; done
 ```
-
 
 
 
