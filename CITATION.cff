@@ -1,0 +1,36 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Youpot
+message: Youpot is a unique proxy-back honeypot
+type: software
+authors:
+  - given-names: Jacek
+    family-names: Lipkowski
+    email: youpot@lipkowski.org
+    affiliation: SQ5BPF
+repository-code: 'https://github.com/sq5bpf/youpot'
+abstract: >-
+  Youpot is a unique proxy-back honeypot for works. 
+
+
+  Instead of emulating some service the work will like, the
+  honeypot will just proxy the connection back to the IP
+  that connected, on the same port it connected to. This
+  gives the worm/attacker exactly the type of service it is
+  familiar with, including any known/unknown security
+  problems it may have.
+
+
+  The honeypot can also record the communications through
+  it, MiTM connections (currently TLS and SSH), and perform
+  simple modifications to the traffic (replacing one byte
+  sequence for another).
+
+
+  Written by Jacek Lipkowski SQ5BPF
+keywords:
+  - youpot
+  - honeypot
+license: GPL-3.0
