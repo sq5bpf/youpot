@@ -98,6 +98,7 @@ In directories like:
 Examples:
 
 ###### break STARTTLS in SMTP
+```
 echo -n 'STARTTLS' > /home/youpot/youpot/patterns_fromserver/pattern_1
 echo -n 'STARTWTF' > /home/youpot/youpot/patterns_fromserver/replace_1
 echo  'break STARTTLS from server' > /home/youpot/youpot/patterns_fromserver/descr_1
@@ -107,9 +108,9 @@ echo  'break STARTTLS from client' > /home/youpot/youpot/patterns_fromclient/des
 echo -n 'STARTTLS' > /home/youpot/youpot/patterns_fromserver/pattern_1
 echo -n 'STARTWTF' > /home/youpot/youpot/patterns_fromserver/replace_1
 echo  'break STARTTLS from server' > /home/youpot/youpot/patterns_fromserver/descr_1
-
+```
 ###### mess with HTTP headers
-echo -n 'Accept-Encoding: gzip, deflate' > /home/youpot/youpot/patterns_fromclient/pattern_10
+```echo -n 'Accept-Encoding: gzip, deflate' > /home/youpot/youpot/patterns_fromclient/pattern_10
 echo -n 'Accept-Encoding: wtf' > /home/youpot/youpot/patterns_fromclient/replace_10
 echo 'turn off compression1' > /home/youpot/youpot/patterns_fromclient/descr_10
 
@@ -117,7 +118,7 @@ echo -n 'Accept-Encoding: gzip' > /home/youpot/youpot/patterns_fromclient/patter
 echo -n 'Accept-Encoding: wtf' > /home/youpot/youpot/patterns_fromclient/replace_11
 echo 'turn off compression2' > /home/youpot/youpot/patterns_fromclient/descr_11
 e
-
+```
 
 
 
