@@ -13,7 +13,9 @@ For citation please use CITATION.cff
 ## Reasoning
 
 Building a high interaction honeypot requires either writing a lot
-of code to emulate a service.
+of code to emulate a service, or modifying a some server to work
+as a honeypot. Both is a lot of work, and leaves a big attack 
+surface to take care of.
 
 Building a pure honeypot requires one to set up a whole system/systems that
 can be attacked, then set up cleanup procedures, instrumentation to get
@@ -66,7 +68,43 @@ Example unified diff:
 
 ## Debian specific instructions
 
-... TODO: will add some stuff here later.
+Example debian 12.x install:
+
+* install Debian 12 (i used debian 12.6 installer) - i used kvm with 2 cpus and 2GB ram, 
+guided/entire disk. 
+* In the debian installer "Choose software to install" deselect all options
+* apt install net-tools tcpdump build-essential vim-nox aptitude openssh-server git libssl-dev
+* adduser youpot
+* Change /etc/network/interfaces to add a dummy interface:
+```
+source /etc/network/interfaces.d/*
+auto lo
+iface lo inet loopback
+# this is the script that configures the firewall:
+pre-up /etc/network/firewall.sh
+
+# outside interface
+auto ens192
+iface ens192 inet static
+address 1.2.3.4/24
+gateway 1.2.3.1
+dns-nameservers 8.8.8.8
+
+# dummy interface for sshd to listen on
+auto dummy0
+iface dummy0 inet static
+address 192.168.100.1
+netmask 255.255.255.252
+pre-up /sbin/modprobe dummy numdummies=4
+```
+
+* Change sshd config to listen on 192.168.100.1
+Add this to /etc/ssh/sshd_config:
+ListenAddress 192.168.100.1
+
+* Install and configure openvpn, add a route to 192.168.100.1
+* Reboot, check if you can connect via openvpn and login to ssh to 192.168.100.1
+* As the youpot user do: cd ; git clone https://github.com/sq5bpf/youpot; cd youpot; make all
 
 
 ## Care and feeding
@@ -110,7 +148,8 @@ echo -n 'STARTWTF' > /home/youpot/youpot/patterns_fromserver/replace_1
 echo  'break STARTTLS from server' > /home/youpot/youpot/patterns_fromserver/descr_1
 ```
 ###### mess with HTTP headers
-```echo -n 'Accept-Encoding: gzip, deflate' > /home/youpot/youpot/patterns_fromclient/pattern_10
+```
+echo -n 'Accept-Encoding: gzip, deflate' > /home/youpot/youpot/patterns_fromclient/pattern_10
 echo -n 'Accept-Encoding: wtf' > /home/youpot/youpot/patterns_fromclient/replace_10
 echo 'turn off compression1' > /home/youpot/youpot/patterns_fromclient/descr_10
 
