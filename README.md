@@ -35,7 +35,7 @@ The attacker is the honeypot :)
 
 Installing the software needs some basic linux admin/networking/development skills.
 
-* Make sure you can run this service: you have the necssesary expertiese, you have permission from all involved parties etc. If in doubt consult a lawyer.
+* Make sure you can run this service: you have the necssesary expertiese, you have permission from all involved parties etc.
 * Create a linux host, i used Debian bare-bones GNU/Linux 12.x, but other distros should do too
 * Install the usual C developer tools, openssl dev library (apt install libssl-dev in Debian)
 * Configure some way to have access to the host via something else than TCP from the internet. For example i set up an openvpn listening on UDP, and set up a dummy interface for sshd to listen on. But any other method will do (wire guard, tunneling sshd via tor etc).
@@ -64,16 +64,25 @@ Example unified diff:
 * If all is fine, then run ~/youpot/youpot in some persistant way you like. For example i like to run it under screen, others will prefer tmux or a systemd service
 * Remember to watch the number of free space and free inodes in the /home/youpot/youpot directory
 
+## Testing:
+* Start youpot as the youpot user: /home/youpot/youpot/youpot
+* Connect to the honeypot using telnet from a host running unfirewalled telnetd, login, perform some commands.
+* Check the /home/youpot/log/192.168.122.1/23/SOME_TIMESTAMP (where 192.168.122.1 is the connecting host, SOME_TIMESTAMP is the epoch seconds and microseconds) for files textdump.log, hexdump.log and connection.json
+* Connect to the honeypot using ssh from a host running unfirewalled sshd, accept the key, login, perform some commands.
+* Check the /home/youpot/log/192.168.122.1/22/SOME_TIMESTAMP (where 192.168.122.1 is the connecting host, SOME_TIMESTAMP is the epoch seconds and microseconds) for the file ssh_mitm.log, and a subdirectory with the session contents.
+* Connect to the honeypot using curl -k https://192.168.122.57/some_file.txt (where 192.168.122.57 is the youpot IP) from a host running unfirewalled http server with tls on port 443.
+* Check the /home/youpot/log/192.168.122.1/443/SOME_TIMESTAMP (where 192.168.122.1 is the connecting host, SOME_TIMESTAMP is the epoch seconds and microseconds) for files textdump.log, hexdump.log and connection.json
 
+## Example debian specific instructions
 
-## Debian specific instructions
-
-Example debian 12.x install:
+Youpot can be installed on any linux distribution. 
+I've included an example debian 12.x install:
 
 * install Debian 12 (i used debian 12.6 installer) - i used kvm with 2 cpus and 2GB ram, 
 guided/entire disk. 
 * In the debian installer "Choose software to install" deselect all options
-* apt install net-tools tcpdump build-essential vim-nox aptitude openssh-server git libssl-dev
+* apt install net-tools tcpdump build-essential vim-nox aptitude openssh-server git libssl-dev python3 python3-pip python3-venv
+
 * adduser youpot
 * Change /etc/network/interfaces to add a dummy interface:
 ```
@@ -84,11 +93,11 @@ iface lo inet loopback
 pre-up /etc/network/firewall.sh
 
 # outside interface
-auto ens192
-iface ens192 inet static
-address 1.2.3.4/24
-gateway 1.2.3.1
-dns-nameservers 8.8.8.8
+#auto ens192
+#iface ens192 inet static
+#address 1.2.3.4/24
+#gateway 1.2.3.1
+#dns-nameservers 8.8.8.8
 
 # dummy interface for sshd to listen on
 auto dummy0
@@ -104,8 +113,10 @@ ListenAddress 192.168.100.1
 
 * Install and configure openvpn, add a route to 192.168.100.1
 * Reboot, check if you can connect via openvpn and login to ssh to 192.168.100.1
-* As the youpot user do: cd ; git clone https://github.com/sq5bpf/youpot; cd youpot; make all
-
+* As the youpot user in do: cd /home/youpot ; git clone https://github.com/sq5bpf/youpot; cd youpot; make all
+* Patch ~/youpot/utils/lib/python-\*/site-packages/sshmitm/session.py by adding as described above
+* Start youpot: /home/youpot/youpot/youpot
+* Perform testing as described above
 
 ## Care and feeding
 
@@ -179,8 +190,18 @@ cd ~/youpot/log
 ls -1d */* | cut -d / -f 2 | sort -u |while read port; do (echo "#######  $port   #######"; cat */$port/*/textdump.log ) |less ; done
 ```
 
+## TODO
 
+This is my hobby research project, and is a very early release, so there is much room for improvement.
 
+Some stuff to do:
 
+* De-uglify source: split the project into separate files, use command line parameters instead of hardcoded values etc.
+* Better integration with ssh-mitm, preferably one that will not need a patch.
+* Implement MiTM proxies for other protocols (similar to how the ssh-mitm proxy support was implemented)
+* Write documentation
+* Better logging and some reporting.
+* Pcap file support
+* This was written in C, should probably be rewritten in some more modern language
 
 
