@@ -9,6 +9,8 @@ Author: Jacek Lipkowski SQ5BPF  <youpot@lipkowski.org>
 
 For citation please use CITATION.cff
 
+[Confidence 2025 slide deck: 
+https://github.com/sq5bpf/misc/blob/master/confidence2025.pdf](https://github.com/sq5bpf/misc/blob/master/confidence2025.pdf)
 
 ## Reasoning
 
