@@ -1,3 +1,24 @@
+/* YouPot proxy-back honeypot
+ * Author: Jacek Lipkowski SQ5BPF youpot@lipkowski.org
+ *
+ * Youpot is a novel proxy-back pure honeypot for worms (and other adversaries)
+ * While other honeypots will put a lot of effort into emulating some service,
+ * we will just proxy the TCP connection back to the original host on the 
+ * same destination port.
+ *
+ * For citation please use CITATION.cff
+ *
+ * This software is licensed under the GNU General Public License v3.0
+ * Also provided in the file LICENSE.
+ *
+ * Currently tracked in https://github.com/sq5bpf/youpot
+ *
+ * Changelog:
+ * 20251127: added an option to cleanup the helper process so that ssh_mitm does not have to be patched
+ * 20250530: initial public release
+ *
+ */
+
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -164,6 +185,7 @@ void sighup_handler(int s) {
 struct client {
 	pid_t pid;
 	int helper_port;
+	int kill_port; /* when killing it, wait for the helper to close helper_port */
 	char *log_dir;
 	char *host_log_dir;
 	char *hostport_log_dir;
@@ -356,6 +378,8 @@ void client_exit_handler(int slot) {
 	return;
 }
 
+
+
 /* handle SIGCHLD on child process exit, does housekeeping of the clients struct etc */
 void sigchld_handler(int s)
 {
@@ -482,7 +506,7 @@ int ssh_mitm_helper(int slot, int fd1) {
 	while(tries) {
 		usleep(100000);
 		s=con_tcp("127.0.0.1",clients[slot].helper_port);
-		if (s>0) return(s);
+		if (s>0) { clients[slot].kill_port=1; return(s); }
 		tries--;
 	}
 	printf("ERROR: could not connect to mitm helper slot %i, port %i\n",slot,clients[slot].helper_port);
@@ -926,11 +950,27 @@ int join_fds(int fd1,int fd2,int slot) {
 
 void sigalrm_handler(int s) {
 	char tmpstr[512];
+	int c;
+	int tries;
+
 	snprintf(tmpstr,sizeof(tmpstr),"alrm handler: Ending conenction slot:%i  state:%i",current_slot,clients[current_slot].connection_state);
 	logit(tmpstr,NULL,1,1);
 	if (clients[current_slot].helper_pid) { 
 		fprintf(stderr,"*** slot %i  killing helper pid %i\n",current_slot,clients[current_slot].helper_pid);
 		kill(clients[current_slot].helper_pid,SIGINT); 
+		if ((clients[current_slot].kill_port)&&(clients[current_slot].helper_port))
+		{
+			tries=50;
+			/* wait for the helper to stop listening, this is for ssh_mitm currently */
+			while(tries) {
+				tries--;
+				c=con_tcp("127.0.0.1",clients[current_slot].helper_port);
+				if (c>0) { usleep(100000); close(c); continue; }
+			}
+			if (!tries) { 
+				fprintf(stderr,"*** slot %i  helper pid %i did not want to die\n",current_slot,clients[current_slot].helper_pid);
+				kill(clients[current_slot].helper_pid,SIGKILL); }
+		}
 	}
 	client_exit_handler(current_slot);
 	exit(0);

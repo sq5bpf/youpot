@@ -6,7 +6,6 @@ prereq:
 
 ssh-mitm:
 	python3 -m venv utils; . utils/bin/activate; pip install ssh-mitm
-	echo -e "\n\n########   Please patch " utils/lib/*/site-packages/sshmitm/session.py " according to the docs"
 
 certs.pem:
 	echo "Generating new cert"

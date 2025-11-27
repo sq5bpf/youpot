@@ -47,20 +47,6 @@ Installing the software needs some basic linux admin/networking/development skil
  
 * Create a youpot user
 * As the youpot user do: cd ; git clone https://github.com/sq5bpf/youpot; cd youpot; make all
-* Patch ~/youpot/utils/lib/python-\*/site-packages/sshmitm/session.py by adding   os._exit(os.EX_OK) at the end of def close(self) -> None:
-
-Example unified diff:
-```
---- session.py.orig     2025-05-31 00:29:25.164000000 +0200
-+++ session.py  2025-05-26 18:04:55.372000000 +0200
-@@ -360,6 +360,9 @@
-             Colors.stylize(self.sessionid, fg("light_blue") + attr("bold")),
-         )
-         self.closed = True
-+        #sq5bpf
-+        print("sq5bpf: server exit")
-+        os._exit(os.EX_OK)
-```
 
 * Run ~/youpot/youpot as the youpot user. Connect to youpot from some exteral host, and see if it proxies connections back to you (for example if you have 80/tcp running locally, then connecting to 80/tcp on the youpot host should connect you back to the IP you connected from on the same port)
 * If all is fine, then run ~/youpot/youpot in some persistant way you like. For example i like to run it under screen, others will prefer tmux or a systemd service
@@ -116,7 +102,6 @@ ListenAddress 192.168.100.1
 * Install and configure openvpn, add a route to 192.168.100.1
 * Reboot, check if you can connect via openvpn and login to ssh to 192.168.100.1
 * As the youpot user in do: cd /home/youpot ; git clone https://github.com/sq5bpf/youpot; cd youpot; make all
-* Patch ~/youpot/utils/lib/python-\*/site-packages/sshmitm/session.py by adding as described above
 * Start youpot: /home/youpot/youpot/youpot
 * Perform testing as described above
 
@@ -199,7 +184,6 @@ This is my hobby research project, and is a very early release, so there is much
 Some stuff to do:
 
 * De-uglify source: split the project into separate files, use command line parameters instead of hardcoded values etc.
-* Better integration with ssh-mitm, preferably one that will not need a patch.
 * Implement MiTM proxies for other protocols (similar to how the ssh-mitm proxy support was implemented)
 * Write documentation
 * Better logging and some reporting.
