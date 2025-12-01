@@ -14,6 +14,7 @@
  * Currently tracked in https://github.com/sq5bpf/youpot
  *
  * Changelog:
+ * 20251201: made tls detction more permissive
  * 20251127: added an option to cleanup the helper process so that ssh_mitm does not have to be patched
  * 20250530: initial public release
  *
@@ -423,8 +424,11 @@ void sigchld_handler(int s)
 
 /* try to detect the protocol from the first data packet */
 int detect_protocol(unsigned char *buf,int len) {
-	/* nice overview of tls: https://tls12.xargs.org/ */
-	if ((len>2)&&(memcmp(buf,"\x16\x03\x01",3)==0)) {
+	/* nice overview of tls: https://tls12.xargs.org/ 
+	 * note: the 0-3 match for byte 2 are the different tls versions,
+         * we could just do buf[2]<4 but wanted to enumerate them for readability
+         */
+        if ((len>2)&&(buf[0]==0x16)&&(buf[1]==0x03)&&((buf[2]==0)||(buf[2]==1)||(buf[2]==2)||(buf[2]==3))) {
 		printf("protocol tls detected\n");
 		return(PROTOCOL_TLS);
 	}
